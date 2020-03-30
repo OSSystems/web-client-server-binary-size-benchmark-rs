@@ -1,0 +1,15 @@
+[package]
+name = "client_server_testing"
+version = "0.1.0"
+authors = ["Jonathas-Conceicao <jonathas.conceicao@ossystems.com.br"]
+edition = "2018"
+
+[package.metadata.docs.rs]
+features = ["dummy"]
+
+[features]
+default = ["dummy"]
+
+dummy = []
+
+[dependencies]
