@@ -1,15 +1,15 @@
+# Copyright (C) 2020 O.S. Systems Sofware LTDA
+#
+# SPDX-License-Identifier: Apache-2.0
+
 [package]
 name = "client_server_testing"
 version = "0.1.0"
 authors = ["Jonathas-Conceicao <jonathas.conceicao@ossystems.com.br"]
 edition = "2018"
 
-[package.metadata.docs.rs]
-features = ["dummy"]
-
-[features]
-default = ["dummy"]
-
-dummy = []
-
 [dependencies]
+# General dependencies
+openssl = "0.10"
+serde = { version = "1", default-features = false, features = ["derive"] }
+serde_json = { version = "1", default-features = false, features = ["std"] }
