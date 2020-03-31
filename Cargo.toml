@@ -3,10 +3,17 @@
 # SPDX-License-Identifier: Apache-2.0
 
 [package]
-name = "client_server_testing"
+name = "rust-web-client-server-testing"
 version = "0.1.0"
 authors = ["Jonathas-Conceicao <jonathas.conceicao@ossystems.com.br"]
 edition = "2018"
+publish = false
+
+[lib]
+name = "rwcst"
+
+[[bin]]
+name = "dummy"
 
 [dependencies]
 # General dependencies
