@@ -2,12 +2,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 pub mod prelude {
     pub use super::{AppImpl, LocalClientImpl, RemoteClientImpl};
 }
 
+pub mod actix_full;
 pub mod dummy;
 
 #[async_trait::async_trait(?Send)]
@@ -174,7 +175,7 @@ impl Package {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, Serialize, PartialEq)]
 pub struct Info {
     current_version: String,
     count_invalid_packages: u32,
