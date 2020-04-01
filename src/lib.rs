@@ -88,29 +88,16 @@ pub fn run<C: LocalClientImpl, A: AppImpl>(mut client: C, mut app: A) {
 pub struct Signature(pub(crate) Vec<u8>);
 
 impl Signature {
+    const INVALID_SAMPLE: &'static str = r#"Hx6kv5dndxA/3qi9QAgXlaiyCrhKZLE7TLXVHVIU9XNq0qIyuRWCDaBDSXCbFKTgd26gBY6q30FHpxrDuf09UPnznluxv/0LbGbwyyskj4c5CZwQIGCcj+5a+ypV68G7hzFsaY3l7COvtGfQPnFT3B7JovqoLTpNgh/VtI0PHDo="#;
     /// Get a valid signature. Static signature generated with:
     /// ```shell
     /// echo -n '{"product":"fooobarrr","version":"0.0.2"}' | \
     ///   openssl dgst -sha256 -sign fixtures/ssh/key | base64
     /// ```
-    fn new_valid() -> Self {
-        Signature(
-            openssl::base64::decode_block(
-                r#"xcPhKCRaL3YheiVvJOhypjFKW7e8sJzyIve2k+Higp+BtB5ED31rW3wl/noDqvIA7YVyWVnEE/nzRfRrjNOE1ylbxwUuOsjRamCr2y6C8q7rBshA6msRmwsVAmIKHcjGWhL/p1bF9WjS7vNbItx0ujHuDlqgTwutvM9XN702IjE="#,
-            )
-            .unwrap()
-            .to_vec(),
-        )
-    }
+    const VALID_SAMPLE: &'static str = r#"xcPhKCRaL3YheiVvJOhypjFKW7e8sJzyIve2k+Higp+BtB5ED31rW3wl/noDqvIA7YVyWVnEE/nzRfRrjNOE1ylbxwUuOsjRamCr2y6C8q7rBshA6msRmwsVAmIKHcjGWhL/p1bF9WjS7vNbItx0ujHuDlqgTwutvM9XN702IjE="#;
 
-    fn new_invalid() -> Self {
-        Signature(
-            openssl::base64::decode_block(
-                r#"Hx6kv5dndxA/3qi9QAgXlaiyCrhKZLE7TLXVHVIU9XNq0qIyuRWCDaBDSXCbFKTgd26gBY6q30FHpxrDuf09UPnznluxv/0LbGbwyyskj4c5CZwQIGCcj+5a+ypV68G7hzFsaY3l7COvtGfQPnFT3B7JovqoLTpNgh/VtI0PHDo="#,
-            )
-            .unwrap()
-            .to_vec(),
-        )
+    pub fn from_str(content: &str) -> Self {
+        Signature(openssl::base64::decode_block(content).unwrap().to_vec())
     }
 
     pub fn validate(&self, pkg: &Package) -> bool {

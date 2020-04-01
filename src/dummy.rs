@@ -52,11 +52,11 @@ impl super::RemoteClientImpl for RemoteClient {
             0 => None,
             1 => Some((
                 super::Package::parse(&super::Package::default().raw).unwrap(),
-                super::Signature::new_valid(),
+                super::Signature::from_str(super::Signature::VALID_SAMPLE),
             )),
             _ => Some((
                 super::Package::parse(&super::Package::default().raw).unwrap(),
-                super::Signature::new_invalid(),
+                super::Signature::from_str(super::Signature::INVALID_SAMPLE),
             )),
         };
         self.requests += 1;
