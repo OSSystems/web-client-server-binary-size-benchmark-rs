@@ -18,6 +18,7 @@ pub struct App {
 type Err = ();
 type Result<T> = std::result::Result<T, Err>;
 
+#[async_trait::async_trait(?Send)]
 impl super::LocalClientImpl for LocalClient {
     type Err = Err;
 
@@ -25,7 +26,7 @@ impl super::LocalClientImpl for LocalClient {
         LocalClient { requests: 0 }
     }
 
-    fn fetch_info(&mut self) -> Result<super::Info> {
+    async fn fetch_info(&mut self) -> Result<super::Info> {
         let info = super::Info::default();
         let res = match self.requests {
             0 | 1 => info,
@@ -40,6 +41,7 @@ impl super::LocalClientImpl for LocalClient {
     }
 }
 
+#[async_trait::async_trait(?Send)]
 impl super::RemoteClientImpl for RemoteClient {
     type Err = Err;
 
@@ -47,7 +49,7 @@ impl super::RemoteClientImpl for RemoteClient {
         RemoteClient { requests: 0 }
     }
 
-    fn fetch_package(&mut self) -> Result<Option<(super::Package, super::Signature)>> {
+    async fn fetch_package(&mut self) -> Result<Option<(super::Package, super::Signature)>> {
         let res = match self.requests {
             0 => None,
             1 => Some((
@@ -64,6 +66,7 @@ impl super::RemoteClientImpl for RemoteClient {
     }
 }
 
+#[async_trait::async_trait(?Send)]
 impl super::AppImpl for App {
     type Err = Err;
     type RemoteClient = RemoteClient;
@@ -76,11 +79,11 @@ impl super::AppImpl for App {
         Ok(())
     }
 
-    fn info(&mut self) -> Result<&mut super::Info> {
-        Ok(&mut self.info)
+    async fn map_info<F: FnOnce(&mut super::Info)>(&mut self, f: F) -> Result<()> {
+        Ok(f(&mut self.info))
     }
 
-    fn client(&mut self) -> Result<&mut RemoteClient> {
+    async fn client(&mut self) -> Result<&mut RemoteClient> {
         Ok(&mut self.client)
     }
 }

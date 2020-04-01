@@ -10,19 +10,22 @@ pub mod prelude {
 
 pub mod dummy;
 
+#[async_trait::async_trait(?Send)]
 pub trait LocalClientImpl: Sized {
     type Err: std::fmt::Debug;
     fn new() -> Self;
-    fn fetch_info(&mut self) -> Result<Info, Self::Err>;
+    async fn fetch_info(&mut self) -> Result<Info, Self::Err>;
 }
 
+#[async_trait::async_trait(?Send)]
 pub trait RemoteClientImpl: Sized {
     type Err;
 
     fn new(url: &str) -> Self;
-    fn fetch_package(&mut self) -> Result<Option<(Package, Signature)>, Self::Err>;
+    async fn fetch_package(&mut self) -> Result<Option<(Package, Signature)>, Self::Err>;
 }
 
+#[async_trait::async_trait(?Send)]
 pub trait AppImpl: Sized {
     type RemoteClient: RemoteClientImpl;
     type Err: From<<Self::RemoteClient as RemoteClientImpl>::Err> + std::fmt::Debug;
@@ -30,18 +33,18 @@ pub trait AppImpl: Sized {
     fn new(client: Self::RemoteClient) -> Self;
     fn serve(&mut self) -> Result<(), Self::Err>;
 
-    fn info(&mut self) -> Result<&mut Info, Self::Err>;
-    fn client(&mut self) -> Result<&mut Self::RemoteClient, Self::Err>;
+    async fn map_info<F: FnOnce(&mut Info)>(&mut self, f: F) -> Result<(), Self::Err>;
+    async fn client(&mut self) -> Result<&mut Self::RemoteClient, Self::Err>;
 
-    fn process(&mut self) -> Result<(), Self::Err> {
-        match self.client()?.fetch_package()? {
+    async fn process(&mut self) -> Result<(), Self::Err> {
+        match self.client().await?.fetch_package().await? {
             None => {}
             Some((pkg, sig)) => {
                 if sig.validate(&pkg) {
-                    self.info()?.current_version = pkg.version;
+                    self.map_info(move |info| info.current_version = pkg.version).await?;
                     return Ok(());
                 }
-                self.info()?.count_invalid_packages += 1;
+                self.map_info(move |info| info.count_invalid_packages += 1).await?;
             }
         }
 
@@ -49,34 +52,34 @@ pub trait AppImpl: Sized {
     }
 }
 
-pub fn run<C: LocalClientImpl, A: AppImpl>(mut client: C, mut app: A) {
+pub async fn run<C: LocalClientImpl, A: AppImpl>(mut client: C, mut app: A) {
     app.serve().unwrap(); // Start serving the app for the local client
 
-    let info = client.fetch_info().unwrap();
+    let info = client.fetch_info().await.unwrap();
     assert_eq!(info, Info::default(), "Info should be default as nothing has run so far");
 
-    app.process().unwrap();
-    let info = client.fetch_info().unwrap();
+    app.process().await.unwrap();
+    let info = client.fetch_info().await.unwrap();
     assert_eq!(info, Info::default(), "Info should still be default as update will not apply yet");
 
-    app.process().unwrap();
-    let info = client.fetch_info().unwrap();
+    app.process().await.unwrap();
+    let info = client.fetch_info().await.unwrap();
     assert_eq!(
         info,
         Info { current_version: String::from("0.0.2"), count_invalid_packages: 0 },
         "Info should show the updated current_version"
     );
 
-    app.process().unwrap();
-    let info = client.fetch_info().unwrap();
+    app.process().await.unwrap();
+    let info = client.fetch_info().await.unwrap();
     assert_eq!(
         info,
         Info { current_version: String::from("0.0.2"), count_invalid_packages: 1 },
         "Info should show the updated current_version with the updated count of invalid packages"
     );
 
-    app.process().unwrap();
-    let info = client.fetch_info().unwrap();
+    app.process().await.unwrap();
+    let info = client.fetch_info().await.unwrap();
     assert_eq!(
         info,
         Info { current_version: String::from("0.0.2"), count_invalid_packages: 2 },
