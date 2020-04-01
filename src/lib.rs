@@ -87,6 +87,29 @@ pub async fn run<C: LocalClientImpl, A: AppImpl>(mut client: C, mut app: A) {
     );
 }
 
+pub fn start_remote_mock() -> (String, Vec<mockito::Mock>) {
+    let mut guards = Vec::default();
+    let body = Package::default().raw;
+    guards.push(mockito::mock("GET", "/").with_status(404).create());
+    guards.push(
+        mockito::mock("GET", "/")
+            .with_status(200)
+            .with_header("signature", Signature::VALID_SAMPLE)
+            .with_body(&body)
+            .create(),
+    );
+    guards.push(
+        mockito::mock("GET", "/")
+            .with_status(200)
+            .with_header("signature", Signature::INVALID_SAMPLE)
+            .with_body(&body)
+            .expect_at_least(2)
+            .create(),
+    );
+
+    (mockito::server_url(), guards)
+}
+
 #[derive(Debug)]
 pub struct Signature(pub(crate) Vec<u8>);
 
