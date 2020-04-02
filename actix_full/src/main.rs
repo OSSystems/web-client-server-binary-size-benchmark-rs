@@ -31,8 +31,14 @@ struct App {
     client: RemoteClient,
 }
 
-// FIXME: add some real error handling
-type Err = ();
+#[derive(Debug, derive_more::From)]
+enum Err {
+    Server(actix_web::Error),
+    Client(awc::error::SendRequestError),
+    JsonPayload(awc::error::JsonPayloadError),
+    Payload(awc::error::PayloadError),
+    Parsing(rwcst::ParsingError),
+}
 type Result<T> = std::result::Result<T, Err>;
 
 #[async_trait::async_trait(?Send)]
@@ -44,7 +50,7 @@ impl rwcst::LocalClientImpl for LocalClient {
     }
 
     async fn fetch_info(&mut self) -> Result<rwcst::Info> {
-        Ok(self.client.get("http://localhost:8001").send().await.unwrap().json().await.unwrap())
+        Ok(self.client.get("http://localhost:8001").send().await?.json().await?)
     }
 }
 
@@ -61,13 +67,13 @@ impl rwcst::RemoteClientImpl for RemoteClient {
     }
 
     async fn fetch_package(&mut self) -> Result<Option<(rwcst::Package, rwcst::Signature)>> {
-        let mut response = self.client.get(&self.remote).send().await.unwrap();
+        let mut response = self.client.get(&self.remote).send().await?;
 
         if let actix_web::http::StatusCode::OK = response.status() {
             let sign = rwcst::Signature::from_str(
                 &response.headers().get("Signature").unwrap().to_str().unwrap(),
             );
-            let pkg = rwcst::Package::parse(&response.body().await.unwrap()).unwrap();
+            let pkg = rwcst::Package::parse(&response.body().await?)?;
             return Ok(Some((pkg, sign)));
         }
 
@@ -89,9 +95,9 @@ impl rwcst::AppImpl for App {
         #[actix_web::get("/")]
         async fn info(
             info: actix_web::web::Data<Arc<Mutex<rwcst::Info>>>,
-        ) -> Result<actix_web::HttpResponse> {
+        ) -> actix_web::HttpResponse {
             use std::ops::Deref;
-            Ok(actix_web::HttpResponse::Ok().json(info.lock().await.deref()))
+            actix_web::HttpResponse::Ok().json(info.lock().await.deref())
         }
 
         let info_ref = self.info.clone();

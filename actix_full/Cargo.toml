@@ -14,5 +14,6 @@ actix-rt = "1"
 actix-web = { version = "3.0.0-alpha.1", default-features = false }
 async-trait = "0.1"
 awc = { version = "2.0.0-alpha.1", default-features = false, features = ["compress", "openssl"] }
+derive_more = { version = "0.99", default-features = false, features = ["from"] }
 futures-util = "0.3"
 rwcst = { path = "..", package = "rust-web-client-server-testing" }
