@@ -5,18 +5,29 @@
 use futures_util::lock::Mutex;
 use std::sync::Arc;
 
-pub struct LocalClient {
+use rwcst::prelude::*;
+
+#[actix_rt::main]
+async fn main() {
+    let (url, _guards) = rwcst::start_remote_mock();
+    let local_client = LocalClient::new();
+    let remote_client = RemoteClient::new(&url);
+    let app = App::new(remote_client);
+    rwcst::run(local_client, app).await;
+}
+
+struct LocalClient {
     client: awc::Client,
 }
 
-pub struct RemoteClient {
-    info: Arc<Mutex<super::Info>>,
+struct RemoteClient {
+    info: Arc<Mutex<rwcst::Info>>,
     client: awc::Client,
     remote: String,
 }
 
-pub struct App {
-    info: Arc<Mutex<super::Info>>,
+struct App {
+    info: Arc<Mutex<rwcst::Info>>,
     client: RemoteClient,
 }
 
@@ -25,20 +36,20 @@ type Err = ();
 type Result<T> = std::result::Result<T, Err>;
 
 #[async_trait::async_trait(?Send)]
-impl super::LocalClientImpl for LocalClient {
+impl rwcst::LocalClientImpl for LocalClient {
     type Err = Err;
 
     fn new() -> Self {
         LocalClient { client: awc::Client::default() }
     }
 
-    async fn fetch_info(&mut self) -> Result<super::Info> {
+    async fn fetch_info(&mut self) -> Result<rwcst::Info> {
         Ok(self.client.get("http://localhost:8001").send().await.unwrap().json().await.unwrap())
     }
 }
 
 #[async_trait::async_trait(?Send)]
-impl super::RemoteClientImpl for RemoteClient {
+impl rwcst::RemoteClientImpl for RemoteClient {
     type Err = Err;
 
     fn new(remote: &str) -> Self {
@@ -49,14 +60,14 @@ impl super::RemoteClientImpl for RemoteClient {
         }
     }
 
-    async fn fetch_package(&mut self) -> Result<Option<(super::Package, super::Signature)>> {
+    async fn fetch_package(&mut self) -> Result<Option<(rwcst::Package, rwcst::Signature)>> {
         let mut response = self.client.get(&self.remote).send().await.unwrap();
 
         if let actix_web::http::StatusCode::OK = response.status() {
-            let sign = super::Signature::from_str(
+            let sign = rwcst::Signature::from_str(
                 &response.headers().get("Signature").unwrap().to_str().unwrap(),
             );
-            let pkg = super::Package::parse(&response.body().await.unwrap()).unwrap();
+            let pkg = rwcst::Package::parse(&response.body().await.unwrap()).unwrap();
             return Ok(Some((pkg, sign)));
         }
 
@@ -65,7 +76,7 @@ impl super::RemoteClientImpl for RemoteClient {
 }
 
 #[async_trait::async_trait(?Send)]
-impl super::AppImpl for App {
+impl rwcst::AppImpl for App {
     type Err = Err;
     type RemoteClient = RemoteClient;
 
@@ -77,7 +88,7 @@ impl super::AppImpl for App {
     fn serve(&mut self) -> Result<()> {
         #[actix_web::get("/")]
         async fn info(
-            info: actix_web::web::Data<Arc<Mutex<super::Info>>>,
+            info: actix_web::web::Data<Arc<Mutex<rwcst::Info>>>,
         ) -> Result<actix_web::HttpResponse> {
             use std::ops::Deref;
             Ok(actix_web::HttpResponse::Ok().json(info.lock().await.deref()))
@@ -105,7 +116,7 @@ impl super::AppImpl for App {
         Ok(())
     }
 
-    async fn map_info<F: FnOnce(&mut super::Info)>(&mut self, f: F) -> Result<()> {
+    async fn map_info<F: FnOnce(&mut rwcst::Info)>(&mut self, f: F) -> Result<()> {
         use std::ops::DerefMut;
         Ok(f(self.info.lock().await.deref_mut()))
     }

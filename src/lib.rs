@@ -8,9 +8,6 @@ pub mod prelude {
     pub use super::{AppImpl, LocalClientImpl, RemoteClientImpl};
 }
 
-pub mod actix_full;
-pub mod dummy;
-
 #[async_trait::async_trait(?Send)]
 pub trait LocalClientImpl: Sized {
     type Err: std::fmt::Debug;
@@ -112,16 +109,16 @@ pub fn start_remote_mock() -> (String, Vec<mockito::Mock>) {
 }
 
 #[derive(Debug)]
-pub struct Signature(pub(crate) Vec<u8>);
+pub struct Signature(pub Vec<u8>);
 
 impl Signature {
-    const INVALID_SAMPLE: &'static str = r#"Hx6kv5dndxA/3qi9QAgXlaiyCrhKZLE7TLXVHVIU9XNq0qIyuRWCDaBDSXCbFKTgd26gBY6q30FHpxrDuf09UPnznluxv/0LbGbwyyskj4c5CZwQIGCcj+5a+ypV68G7hzFsaY3l7COvtGfQPnFT3B7JovqoLTpNgh/VtI0PHDo="#;
+    pub const INVALID_SAMPLE: &'static str = r#"Hx6kv5dndxA/3qi9QAgXlaiyCrhKZLE7TLXVHVIU9XNq0qIyuRWCDaBDSXCbFKTgd26gBY6q30FHpxrDuf09UPnznluxv/0LbGbwyyskj4c5CZwQIGCcj+5a+ypV68G7hzFsaY3l7COvtGfQPnFT3B7JovqoLTpNgh/VtI0PHDo="#;
     /// Get a valid signature. Static signature generated with:
     /// ```shell
     /// echo -n '{"product":"fooobarrr","version":"0.0.2"}' | \
     ///   openssl dgst -sha256 -sign fixtures/ssh/key | base64
     /// ```
-    const VALID_SAMPLE: &'static str = r#"xcPhKCRaL3YheiVvJOhypjFKW7e8sJzyIve2k+Higp+BtB5ED31rW3wl/noDqvIA7YVyWVnEE/nzRfRrjNOE1ylbxwUuOsjRamCr2y6C8q7rBshA6msRmwsVAmIKHcjGWhL/p1bF9WjS7vNbItx0ujHuDlqgTwutvM9XN702IjE="#;
+    pub const VALID_SAMPLE: &'static str = r#"xcPhKCRaL3YheiVvJOhypjFKW7e8sJzyIve2k+Higp+BtB5ED31rW3wl/noDqvIA7YVyWVnEE/nzRfRrjNOE1ylbxwUuOsjRamCr2y6C8q7rBshA6msRmwsVAmIKHcjGWhL/p1bF9WjS7vNbItx0ujHuDlqgTwutvM9XN702IjE="#;
 
     pub fn from_str(content: &str) -> Self {
         Signature(openssl::base64::decode_block(content).unwrap().to_vec())
@@ -142,9 +139,9 @@ impl Signature {
 
 #[derive(Debug)]
 pub struct Package {
-    product_uid: String,
-    version: String,
-    raw: Vec<u8>,
+    pub product_uid: String,
+    pub version: String,
+    pub raw: Vec<u8>,
 }
 
 impl Default for Package {
@@ -158,7 +155,7 @@ impl Default for Package {
 }
 
 impl Package {
-    pub(crate) fn parse(content: &[u8]) -> serde_json::Result<Self> {
+    pub fn parse(content: &[u8]) -> serde_json::Result<Self> {
         #[derive(Deserialize)]
         struct PackageAux {
             #[serde(rename = "product")]
@@ -177,8 +174,8 @@ impl Package {
 
 #[derive(Deserialize, Debug, Serialize, PartialEq)]
 pub struct Info {
-    current_version: String,
-    count_invalid_packages: u32,
+    pub current_version: String,
+    pub count_invalid_packages: u32,
 }
 
 impl Default for Info {

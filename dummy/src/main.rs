@@ -2,16 +2,27 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-pub struct LocalClient {
+use rwcst::prelude::*;
+
+#[tokio::main]
+async fn main() {
+    let (url, _guards) = rwcst::start_remote_mock();
+    let local_client = LocalClient::new();
+    let remote_client = RemoteClient::new(&url);
+    let app = App::new(remote_client);
+    rwcst::run(local_client, app).await;
+}
+
+struct LocalClient {
     requests: u32,
 }
 
-pub struct RemoteClient {
+struct RemoteClient {
     requests: u32,
 }
 
-pub struct App {
-    info: super::Info,
+struct App {
+    info: rwcst::Info,
     client: RemoteClient,
 }
 
@@ -19,19 +30,19 @@ type Err = ();
 type Result<T> = std::result::Result<T, Err>;
 
 #[async_trait::async_trait(?Send)]
-impl super::LocalClientImpl for LocalClient {
+impl rwcst::LocalClientImpl for LocalClient {
     type Err = Err;
 
     fn new() -> Self {
         LocalClient { requests: 0 }
     }
 
-    async fn fetch_info(&mut self) -> Result<super::Info> {
-        let info = super::Info::default();
+    async fn fetch_info(&mut self) -> Result<rwcst::Info> {
+        let info = rwcst::Info::default();
         let res = match self.requests {
             0 | 1 => info,
-            2 => super::Info { current_version: String::from("0.0.2"), ..info },
-            n => super::Info {
+            2 => rwcst::Info { current_version: String::from("0.0.2"), ..info },
+            n => rwcst::Info {
                 current_version: String::from("0.0.2"),
                 count_invalid_packages: n - 2,
             },
@@ -42,23 +53,23 @@ impl super::LocalClientImpl for LocalClient {
 }
 
 #[async_trait::async_trait(?Send)]
-impl super::RemoteClientImpl for RemoteClient {
+impl rwcst::RemoteClientImpl for RemoteClient {
     type Err = Err;
 
     fn new(_: &str) -> Self {
         RemoteClient { requests: 0 }
     }
 
-    async fn fetch_package(&mut self) -> Result<Option<(super::Package, super::Signature)>> {
+    async fn fetch_package(&mut self) -> Result<Option<(rwcst::Package, rwcst::Signature)>> {
         let res = match self.requests {
             0 => None,
             1 => Some((
-                super::Package::parse(&super::Package::default().raw).unwrap(),
-                super::Signature::from_str(super::Signature::VALID_SAMPLE),
+                rwcst::Package::parse(&rwcst::Package::default().raw).unwrap(),
+                rwcst::Signature::from_str(rwcst::Signature::VALID_SAMPLE),
             )),
             _ => Some((
-                super::Package::parse(&super::Package::default().raw).unwrap(),
-                super::Signature::from_str(super::Signature::INVALID_SAMPLE),
+                rwcst::Package::parse(&rwcst::Package::default().raw).unwrap(),
+                rwcst::Signature::from_str(rwcst::Signature::INVALID_SAMPLE),
             )),
         };
         self.requests += 1;
@@ -67,19 +78,19 @@ impl super::RemoteClientImpl for RemoteClient {
 }
 
 #[async_trait::async_trait(?Send)]
-impl super::AppImpl for App {
+impl rwcst::AppImpl for App {
     type Err = Err;
     type RemoteClient = RemoteClient;
 
     fn new(client: RemoteClient) -> Self {
-        App { info: super::Info::default(), client }
+        App { info: rwcst::Info::default(), client }
     }
 
     fn serve(&mut self) -> Result<()> {
         Ok(())
     }
 
-    async fn map_info<F: FnOnce(&mut super::Info)>(&mut self, f: F) -> Result<()> {
+    async fn map_info<F: FnOnce(&mut rwcst::Info)>(&mut self, f: F) -> Result<()> {
         Ok(f(&mut self.info))
     }
 
