@@ -4,6 +4,8 @@
 
 use serde::{Deserialize, Serialize};
 
+pub use serde_json::Error as ParsingError;
+
 pub mod prelude {
     pub use super::{AppImpl, LocalClientImpl, RemoteClientImpl};
 }
@@ -155,7 +157,7 @@ impl Default for Package {
 }
 
 impl Package {
-    pub fn parse(content: &[u8]) -> serde_json::Result<Self> {
+    pub fn parse(content: &[u8]) -> Result<Self, ParsingError> {
         #[derive(Deserialize)]
         struct PackageAux {
             #[serde(rename = "product")]
