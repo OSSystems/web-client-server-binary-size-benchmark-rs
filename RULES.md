@@ -39,7 +39,7 @@ Response 200:
     "json formated Info structure"
 ```
 
-The remote client should make it's requests to the mock server.
+The remote client should support tls connections and will make it's requests to the mock server.
 This mock server can be started by calling [start_remote_mock](src/lib.rs#L90),
 and the `Vec` argument of the function should not be dropped until the main finishes.
 The single request that has to be made to the mock is described as follow:
