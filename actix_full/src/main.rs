@@ -59,9 +59,16 @@ impl rwcst::RemoteClientImpl for RemoteClient {
     type Err = Err;
 
     fn new(remote: &str) -> Self {
+        use openssl::ssl::{SslConnector, SslMethod};
         RemoteClient {
             info: Arc::default(),
-            client: awc::Client::default(),
+            client: awc::Client::build()
+                .connector(
+                    awc::Connector::new()
+                        .ssl(SslConnector::builder(SslMethod::tls()).unwrap().build())
+                        .finish(),
+                )
+                .finish(),
             remote: remote.to_owned(),
         }
     }
