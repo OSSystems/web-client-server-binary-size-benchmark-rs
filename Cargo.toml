@@ -20,10 +20,7 @@ members = [
 
 [dependencies]
 async-trait = "0.1"
-mockito = { version = "0.24", default-features = false }
+mockito = { version = "0.25", default-features = false }
 openssl = "0.10"
 serde = { version = "1", default-features = false, features = ["derive"] }
 serde_json = { version = "1", default-features = false, features = ["std"] }
-
-[patch.crates-io]
-mockito = { git = "https://github.com/OSSystems/mockito.git", branch = "topic/multiple_mock_matching" }
