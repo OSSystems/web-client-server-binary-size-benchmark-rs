@@ -21,7 +21,6 @@ struct LocalClient {
 }
 
 struct RemoteClient {
-    info: Arc<Mutex<rwcst::Info>>,
     client: awc::Client,
     remote: String,
 }
@@ -61,7 +60,6 @@ impl rwcst::RemoteClientImpl for RemoteClient {
     fn new(remote: &str) -> Self {
         use openssl::ssl::{SslConnector, SslMethod};
         RemoteClient {
-            info: Arc::default(),
             client: awc::Client::build()
                 .connector(
                     awc::Connector::new()
@@ -94,7 +92,7 @@ impl rwcst::AppImpl for App {
     type RemoteClient = RemoteClient;
 
     fn new(client: RemoteClient) -> Self {
-        let info = client.info.clone();
+        let info = Arc::default();
         App { info, client }
     }
 

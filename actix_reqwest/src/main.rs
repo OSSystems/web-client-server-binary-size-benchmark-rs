@@ -21,7 +21,6 @@ struct LocalClient {
 }
 
 struct RemoteClient {
-    info: Arc<Mutex<rwcst::Info>>,
     client: reqwest::Client,
     remote: String,
 }
@@ -57,11 +56,7 @@ impl rwcst::RemoteClientImpl for RemoteClient {
     type Err = Err;
 
     fn new(remote: &str) -> Self {
-        RemoteClient {
-            info: Arc::default(),
-            client: reqwest::Client::new(),
-            remote: remote.to_owned(),
-        }
+        RemoteClient { client: reqwest::Client::new(), remote: remote.to_owned() }
     }
 
     async fn fetch_package(&mut self) -> Result<Option<(rwcst::Package, rwcst::Signature)>> {
@@ -85,7 +80,7 @@ impl rwcst::AppImpl for App {
     type RemoteClient = RemoteClient;
 
     fn new(client: RemoteClient) -> Self {
-        let info = client.info.clone();
+        let info = Arc::default();
         App { info, client }
     }
 
