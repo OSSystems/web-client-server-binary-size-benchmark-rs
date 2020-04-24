@@ -15,7 +15,8 @@ name = "rwcst"
 [workspace]
 members = [
         "dummy",
-        "actix_full"
+        "actix_full",
+        "actix_reqwest",
 ]
 
 [dependencies]
