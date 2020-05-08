@@ -65,11 +65,11 @@ impl rwcst::RemoteClientImpl for RemoteClient {
             0 => None,
             1 => Some((
                 rwcst::Package::parse(&rwcst::Package::default().raw).unwrap(),
-                rwcst::Signature::from_str(rwcst::Signature::VALID_SAMPLE),
+                rwcst::Signature::from_base64_str(rwcst::Signature::VALID_SAMPLE),
             )),
             _ => Some((
                 rwcst::Package::parse(&rwcst::Package::default().raw).unwrap(),
-                rwcst::Signature::from_str(rwcst::Signature::INVALID_SAMPLE),
+                rwcst::Signature::from_base64_str(rwcst::Signature::INVALID_SAMPLE),
             )),
         };
         self.requests += 1;

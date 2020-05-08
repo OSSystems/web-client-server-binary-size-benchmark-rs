@@ -122,7 +122,7 @@ impl Signature {
     /// ```
     pub const VALID_SAMPLE: &'static str = r#"xcPhKCRaL3YheiVvJOhypjFKW7e8sJzyIve2k+Higp+BtB5ED31rW3wl/noDqvIA7YVyWVnEE/nzRfRrjNOE1ylbxwUuOsjRamCr2y6C8q7rBshA6msRmwsVAmIKHcjGWhL/p1bF9WjS7vNbItx0ujHuDlqgTwutvM9XN702IjE="#;
 
-    pub fn from_str(content: &str) -> Self {
+    pub fn from_base64_str(content: &str) -> Self {
         Signature(openssl::base64::decode_block(content).unwrap().to_vec())
     }
 

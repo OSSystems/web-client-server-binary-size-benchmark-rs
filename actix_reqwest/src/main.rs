@@ -63,7 +63,7 @@ impl rwcst::RemoteClientImpl for RemoteClient {
         let response = self.client.get(&self.remote).send().await?;
 
         if let reqwest::StatusCode::OK = response.status() {
-            let sign = rwcst::Signature::from_str(
+            let sign = rwcst::Signature::from_base64_str(
                 &response.headers().get("Signature").unwrap().to_str().unwrap(),
             );
             let pkg = rwcst::Package::parse(&response.bytes().await?)?;
