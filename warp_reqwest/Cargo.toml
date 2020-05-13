@@ -1,0 +1,16 @@
+[package]
+name = "warp_reqwest"
+version = "0.1.0"
+authors = ["asakiz <asakizin@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-trait = "0.1"
+derive_more = { version = "0.99", default-features = false, features = ["from"] }
+futures-util = "0.3"
+reqwest = { version = "0.10", default-features = false, features = ["json", "native-tls"] }
+rwcst = { path = "..", package = "rust-web-client-server-testing" }
+tokio = { version = "0.2", features = ["macros"] }
+warp = "0.2"
