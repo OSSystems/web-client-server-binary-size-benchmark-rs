@@ -17,6 +17,7 @@ members = [
         "dummy",
         "actix_full",
         "actix_reqwest",
+        "hyper_reqwest",
         "warp_reqwest",
 ]
 
