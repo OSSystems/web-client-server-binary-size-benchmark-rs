@@ -4,3 +4,8 @@ Cargo.lock
 
 \#*
 .\#*
+
+.RData
+.Rhistory
+\results
+.cargo/config
