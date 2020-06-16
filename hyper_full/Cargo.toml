@@ -1,0 +1,20 @@
+# Copyright (C) 2020 O.S. Systems Sofware LTDA
+#
+# SPDX-License-Identifier: Apache-2.0
+
+[package]
+name = "hyper_full"
+version = "0.1.0"
+authors = ["asakiz <asakizin@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+async-trait = "0.1"
+derive_more = { version = "0.99", default-features = false, features = ["from", "display", "error"] }
+futures-util = "0.3"
+hyper = "0.13"
+http = "0.2"
+rwcst = { path = "..", package = "rust-web-client-server-testing" }
+tokio = { version = "0.2", features = ["macros"] }
+serde_json = "1.0"
+bytes = "0.5.4"
