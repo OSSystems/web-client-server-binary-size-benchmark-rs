@@ -21,6 +21,7 @@ members = [
         "hyper_full",
         "hyper_reqwest",
         "surf_warp",
+        "surf_tide",
         "warp_reqwest",
 ]
 
