@@ -1,10 +1,12 @@
+# Copyright (C) 2020 O.S. Systems Sofware LTDA
+#
+# SPDX-License-Identifier: Apache-2.0
+
 [package]
 name = "hyper_reqwest"
 version = "0.1.0"
 authors = ["asakiz <asakizin@gmail.com>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 actix-rt = "1"
