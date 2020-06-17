@@ -1,0 +1,19 @@
+# Copyright (C) 2020 O.S. Systems Sofware LTDA
+#
+# SPDX-License-Identifier: Apache-2.0
+
+[package]
+name = "surf_tide"
+version = "0.1.0"
+authors = ["asakiz <asakizin@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+async-trait = "0.1"
+async-std = { version = "1", default-features = false, features = ["attributes"] }
+derive_more = { version = "0.99", default-features = false, features = ["from"] }
+futures-util = "0.3"
+rwcst = { path = "..", package = "rust-web-client-server-testing" }
+surf = "2.0.0-alpha.4"
+http-client = "3.0"
+tide = "0.11"
