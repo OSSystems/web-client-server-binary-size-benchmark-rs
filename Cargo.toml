@@ -20,8 +20,8 @@ members = [
         "gotham_reqwest",
         "hyper_full",
         "hyper_reqwest",
-        "surf_warp",
-        "surf_tide",
+        "warp_surf",
+        "tide_surf",
         "warp_reqwest",
 ]
 
