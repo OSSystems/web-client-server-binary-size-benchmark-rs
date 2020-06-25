@@ -1,4 +1,4 @@
-# (wip) rust-web-client-server-testing
+# Web-Client-Server Binary-Size Benchmark - Rust
 
 This small benchmark is intended to compare how different combinations of HTTP
 Client and HTTP Server will affect the binary size of applications.
@@ -26,77 +26,104 @@ The [RULES.md](RULES.md) file describe how implementations should be made.
 
 ## Contestants
 
-| Implementation | Client |   Server  |                         Description                   |
-|:--------------:|:------:|:---------:|:-----------------------------------------------------:|
-|      dummy     |    -   |     -     | Used as size baseline for the lib                     |
-|   actix_full   |   awc  | actix-web | Implementation fully based on actix-web using OpenSSL |
+| Implementation  |   Server  | Client  |
+|:---------------:|:---------:|:-------:|
+| dummy           | -         | -       |
+| actix\_full     | actix-web | awc     |
+| actix\_reqwest  | actix-web | reqwest |
+| gotham\_reqwest | gotham    | reqwest |
+| hyper\_full     | hyper     | hyper   |
+| hyper\_reqwest  | hyper     | reqwest |
+| warp\_surf      | warp      | surf    |
+| tide\_surf      | tide      | surf    |
+| warp\_reqwest   | warp      | reqwest |
 
-## (wip) Binary size 
+## Data Collected
 
-Output generated from `cargo bloat`.
+The total binary size and,
+mainly,
+the distribution of the size contribution by crate is generated using [cargo bloat](https://github.com/RazrFalcon/cargo-bloat).
+Although not 100% precise,
+we believe it's estimations are reliable enough for the data we've collected and analysed.
 
-FIXME: Maybe would be a good a idea to prepare a script for filtering relevant
-(changed from dummy)
-creates from cargo bloat's output.
-This probably would make analysis more easy to visualize.
+For all contestants in this benchmark we have collected information with different build options.
+All builds are generated with *cargo*'s release build plus a combination of the following flags:
 
-### dummy
-```
- File  .text     Size Crate
- 5.4%  25.4% 250.3KiB std
- 4.9%  23.1% 228.1KiB regex_syntax
- 3.3%  15.3% 150.8KiB regex
- 2.1%   9.9%  97.2KiB mockito
- 1.6%   7.5%  74.4KiB aho_corasick
- 0.9%   4.1%  40.3KiB [Unknown]
- 0.7%   3.5%  34.2KiB serde_json
- 0.7%   3.3%  32.9KiB assert_json_diff
- 0.4%   2.0%  19.8KiB rwcst
- 0.2%   1.1%  10.4KiB rand_chacha
- 0.1%   0.6%   5.8KiB openssl
- 0.1%   0.4%   4.0KiB tokio
- 0.1%   0.3%   3.4KiB httparse
- 0.1%   0.3%   3.2KiB memchr
- 0.1%   0.3%   2.8KiB ryu
- 0.0%   0.2%   2.3KiB getrandom
- 0.0%   0.2%   1.8KiB thread_local
- 0.0%   0.2%   1.6KiB percent_encoding
- 0.0%   0.1%    1016B serde
- 0.0%   0.1%     984B cc
- 0.0%   0.2%   1.5KiB And 7 more crates. Use -n N to show more.
-21.4% 100.0% 985.9KiB .text section size, the file size is 4.5MiB
+|  Parameter    | Values             |
+|:-------------:|:------------------:|
+| [Optimization]  | [0, 1, 2, 3, s, z] |
+| [LTO]           | [thin, fat]        |
+| [Codegen Units] | [1, 16]            |
 
-Note: numbers above are a result of guesswork. They are not 100% correct and never will be.
-```
+[Optimization]: https://doc.rust-lang.org/cargo/reference/profiles.html#opt-level
+[LTO]: https://doc.rust-lang.org/cargo/reference/profiles.html#lto
+[Codegen Units]: https://doc.rust-lang.org/cargo/reference/profiles.html#codegen-units
 
-### actix_full
-```
- File  .text     Size Crate
- 8.1%  22.2% 872.1KiB std
- 5.8%  15.7% 618.0KiB awc
- 2.3%   6.2% 244.3KiB h2
- 2.1%   5.9% 230.2KiB regex_syntax
- 2.1%   5.7% 223.8KiB regex
- 1.5%   4.1% 163.2KiB actix_server
- 1.5%   4.1% 161.8KiB trust_dns_proto
- 1.3%   3.7% 144.0KiB actix_http
- 1.1%   3.0% 119.3KiB tokio
- 1.0%   2.6% 102.4KiB [Unknown]
- 0.9%   2.5%  97.4KiB mockito
- 0.8%   2.3%  90.5KiB trust_dns_resolver
- 0.7%   1.9%  74.4KiB aho_corasick
- 0.7%   1.9%  73.8KiB actix_rt
- 0.7%   1.9%  73.2KiB actix_web
- 0.5%   1.3%  52.7KiB http
- 0.5%   1.3%  50.4KiB url
- 0.4%   1.2%  47.4KiB serde_json
- 0.4%   1.1%  42.7KiB rustc_demangle
- 0.3%   0.8%  32.9KiB assert_json_diff
- 3.0%   8.2% 322.8KiB And 57 more crates. Use -n N to show more.
-36.6% 100.0%   3.8MiB .text section size, the file size is 10.5MiB
+## Analysis and Results
 
-Note: numbers above are a result of guesswork. They are not 100% correct and never will be.
-```
+The main lessons we've learned from checking the results of our benchmark can be summarised in three points:
 
-### Conclusion
-TBD
+1. [Don't be afraid of using micro-dependencies](#dont-fear-micro-dependencies);
+2. [Set some extra optimization flags](#set-the-optimization-flags);
+3. [The most suitable pair for us is tide-surf](#tide-surf-the-current-winner);
+
+Here on the repository README.md we will be presenting a feel graphs in order to illustrate our analysis;
+the full data, as well as some more interactive graphs,
+are available at [this shinyapp](https://jonathas-conceicao.shinyapps.io/web-client-server-binary-size-benchmark-rs/) for anyone who wants to have a more complete view of it.
+
+### Don't fear micro-dependencies
+
+It's easy to see how having multiple dependencies can largely affect build time of our projects.
+But when it comes to binary size, the data we collected tells us that there is little to worry there.
+Take for example the following plot for the major crates on our larger contestant, `actix_full`:
+
+![actix\_full crate size](fixtures/actix_full_crates_size.svg)
+Figure: *`actix_full` with top crates highlighted ([Interactive graph](https://jonathas-conceicao.shinyapps.io/web-client-server-binary-size-benchmark-rs/)).*
+
+Even after optimization,
+the plot shows that only 5 of it's total 76 crates accounts for over 50% of it's binary size.
+
+The following box plot show the distribution of all crates size across all projects.
+This shows that the vast majority of dependencies contribute very little to the total binary size.
+
+![crates distribution](fixtures/crates_dist.svg)
+Figure: *Crates size distribution ([Interactive graph](https://jonathas-conceicao.shinyapps.io/web-client-server-binary-size-benchmark-rs/)).*
+
+Therefore we find it much more meaningful to choose carefully the core dependency for or apps,
+then it is to trying to minimise the total number of dependencies.
+
+### Set the optimization flags
+
+Binary Size optimization is not the default goal that the rust compiler aims to achieve,
+but it can get there if the developer requests it.
+The following plot shows how different optimization options affects the Binary Size on our smaller contestant, `tide_surf`.
+
+![optimization plot for tide\_surf](fixtures/optimization_tide_surf.svg)
+Figure: *Optimization parameters on `tide_surf` ([Interactive graph](https://jonathas-conceicao.shinyapps.io/web-client-server-binary-size-benchmark-rs/)).*
+
+Cargo's default release build uses Optimization Level 3, LTO Thin and 16 Codegen Units.
+Comparing that to the smaller binary we've generated we can see a improvement of around 40%.
+All other projects have shown better results when using Optimization Z, LTO Fat and 1 Codegen Unit,
+so that will be our default flags for smaller binary size.
+
+### tide-surf, the current winner
+
+The [async-std](https://github.com/async-rs/async-std) based pair, `tide-surf`,
+is our new choice of HTTP client-server pair for embedded applications.
+Despite having a high level API, it still had better results that more lower level APIs such as `hyper_full`.
+
+If we were to choose a pair that's built fully on top of [tokio](https://github.com/tokio-rs/tokio),
+another of the main runtimes for rust's async ecosystem,
+we will definitely be considering [warp](https://github.com/seanmonstar/warp).
+The crate has presented a small Binary Size overhead over [hyper](https://github.com/hyperium/hyper) for a much more simpler API for building HTTP servers.
+
+![projects sizes](fixtures/projects_sizes.svg)
+Figure: *All projects size ([Interactive graph](https://jonathas-conceicao.shinyapps.io/web-client-server-binary-size-benchmark-rs/))*
+
+## Contributing
+
+New pairs of applications are welcome provided they meet the rules specified to compete.
+
+## License
+
+Licensed under Apache License, Version 2.0 (LICENSE-APACHE or https://www.apache.org/licenses/LICENSE-2.0).
