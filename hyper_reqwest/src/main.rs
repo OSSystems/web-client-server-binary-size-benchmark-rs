@@ -2,13 +2,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+use derive_more::{Display, Error, From};
 use futures_util::lock::Mutex;
-use std::{convert::Infallible, sync::Arc};
-
 use hyper::{
     service::{make_service_fn, service_fn},
-    Body, Method, Request, Response, Server, StatusCode,
+    Body, Method, Response, Server, StatusCode,
 };
+use std::{
+    convert::Infallible,
+    ops::{Deref, DerefMut},
+    sync::Arc,
+};
+
 use rwcst::prelude::*;
 
 #[tokio::main]
@@ -34,12 +39,11 @@ struct App {
     client: RemoteClient,
 }
 
-#[derive(Debug, derive_more::Display, derive_more::From, derive_more::Error)]
+#[derive(Debug, Display, Error, From)]
 enum Err {
     Server(hyper::Error),
     Client(reqwest::Error),
     Parsing(rwcst::ParsingError),
-    Http(http::Error),
 }
 type Result<T> = std::result::Result<T, Err>;
 
@@ -90,32 +94,26 @@ impl rwcst::AppImpl for App {
     }
 
     fn serve(&mut self) -> Result<()> {
-        async fn handle(
-            req: Request<Body>,
-            state: Arc<Mutex<rwcst::Info>>,
-        ) -> Result<Response<Body>> {
-            match (req.method(), req.uri().path()) {
-                (&Method::GET, "/") => {
-                    use std::ops::Deref;
-
-                    let state = state.lock().await;
-                    let body = serde_json::to_string(&state.deref())?;
-                    Ok(Response::new(Body::from(body)))
-                }
-                _ => {
-                    let mut not_found = Response::default();
-                    *not_found.status_mut() = StatusCode::NOT_FOUND;
-                    Ok(not_found)
-                }
-            }
-        }
         let state = self.info.clone();
         let make_svc = make_service_fn(move |_conn| {
             let state = state.clone();
-            async move {
-                Ok::<_, Infallible>(service_fn(move |req: Request<Body>| {
+            async {
+                Ok::<_, Infallible>(service_fn(move |req| {
                     let state = state.clone();
-                    handle(req, state)
+                    async move {
+                        match (req.method(), req.uri().path()) {
+                            (&Method::GET, "/") => {
+                                let state = state.lock().await;
+                                let body = serde_json::to_string(&state.deref())?;
+                                Ok(Response::new(Body::from(body)))
+                            }
+                            _ => {
+                                let mut not_found = Response::default();
+                                *not_found.status_mut() = StatusCode::NOT_FOUND;
+                                Ok::<_, Err>(not_found)
+                            }
+                        }
+                    }
                 }))
             }
         });
@@ -127,7 +125,6 @@ impl rwcst::AppImpl for App {
     }
 
     async fn map_info<F: FnOnce(&mut rwcst::Info)>(&mut self, f: F) -> Result<()> {
-        use std::ops::DerefMut;
         Ok(f(self.info.lock().await.deref_mut()))
     }
 
