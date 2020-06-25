@@ -3,8 +3,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use derive_more::From;
+use std::{
+    ops::{Deref, DerefMut},
+    sync::{Arc, Mutex},
+};
+
 use rwcst::prelude::*;
-use std::sync::{Arc, Mutex};
 
 #[tokio::main]
 async fn main() {
@@ -107,8 +111,6 @@ impl rwcst::AppImpl for App {
         struct Info(Arc<Mutex<rwcst::Info>>);
 
         async fn handle(state: State) -> HandlerResult {
-            use std::ops::Deref;
-
             let res = match serde_json::to_string(state.borrow::<Info>().0.deref()) {
                 Ok(body) => {
                     let response =
@@ -120,16 +122,15 @@ impl rwcst::AppImpl for App {
             return res;
         }
 
-        let addr = "127.0.0.1:8001";
         let info = self.info.clone();
-        let srv = gotham::init_server(addr, move || {
+        let srv = gotham::init_server("127.0.0.1:8001", {
             let middleware = StateMiddleware::new(Info(info.clone()));
             let pipeline = single_middleware(middleware);
             let (chain, pipelines) = single_pipeline(pipeline);
 
-            Ok(build_router(chain, pipelines, |route| {
+            build_router(chain, pipelines, |route| {
                 route.get("/").to_async(handle);
-            }))
+            })
         });
 
         tokio::spawn(async { srv.await.unwrap() });
@@ -138,7 +139,6 @@ impl rwcst::AppImpl for App {
     }
 
     async fn map_info<F: FnOnce(&mut rwcst::Info)>(&mut self, f: F) -> Result<()> {
-        use std::ops::DerefMut;
         Ok(f(self.info.lock()?.deref_mut()))
     }
 
