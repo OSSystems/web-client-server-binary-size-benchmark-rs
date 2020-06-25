@@ -3,7 +3,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use futures_util::lock::Mutex;
-use std::sync::Arc;
+use std::{
+    ops::{Deref, DerefMut},
+    sync::Arc,
+};
 
 use rwcst::prelude::*;
 
@@ -101,14 +104,13 @@ impl rwcst::AppImpl for App {
         async fn info(
             info: actix_web::web::Data<Arc<Mutex<rwcst::Info>>>,
         ) -> actix_web::HttpResponse {
-            use std::ops::Deref;
             actix_web::HttpResponse::Ok().json(info.lock().await.deref())
         }
 
         let info_ref = self.info.clone();
+        // Start server a new thread since the runtime is single threaded
         actix_rt::Arbiter::new().exec_fn(|| {
-            actix_rt::Arbiter::spawn(async move {
-                let info_ref = info_ref;
+            actix_rt::Arbiter::spawn(async {
                 actix_web::HttpServer::new(move || {
                     actix_web::App::new().data(info_ref.clone()).service(info)
                 })
@@ -125,7 +127,6 @@ impl rwcst::AppImpl for App {
     }
 
     async fn map_info<F: FnOnce(&mut rwcst::Info)>(&mut self, f: F) -> Result<()> {
-        use std::ops::DerefMut;
         Ok(f(self.info.lock().await.deref_mut()))
     }
 
