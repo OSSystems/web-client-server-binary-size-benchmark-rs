@@ -109,9 +109,6 @@ impl rwcst::AppImpl for App {
             })
         });
 
-        // Give time for the server to actually start
-        std::thread::sleep(std::time::Duration::from_secs(1));
-
         Ok(())
     }
 

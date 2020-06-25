@@ -55,6 +55,9 @@ pub trait AppImpl: Sized {
 pub async fn run<C: LocalClientImpl, A: AppImpl>(mut client: C, mut app: A) {
     app.serve().unwrap(); // Start serving the app for the local client
 
+    // Give time for the server to actually start
+    std::thread::sleep(std::time::Duration::from_secs(1));
+
     let info = client.fetch_info().await.unwrap();
     assert_eq!(info, Info::default(), "Info should be default as nothing has run so far");
 
