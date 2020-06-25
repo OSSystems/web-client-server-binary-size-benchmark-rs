@@ -2,8 +2,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+use derive_more::From;
 use futures_util::lock::Mutex;
-use std::sync::Arc;
+use std::{
+    ops::{Deref, DerefMut},
+    sync::Arc,
+};
 
 use rwcst::prelude::*;
 
@@ -30,7 +34,7 @@ struct App {
     client: RemoteClient,
 }
 
-#[derive(Debug, derive_more::From)]
+#[derive(Debug, From)]
 enum Err {
     Server(warp::Error),
     Client(reqwest::Error),
@@ -85,8 +89,8 @@ impl rwcst::AppImpl for App {
     }
 
     fn serve(&mut self) -> Result<()> {
-        use std::ops::Deref;
         use warp::{reject::Rejection, reply::Json, Filter};
+
         type Result = std::result::Result<Json, Rejection>;
 
         let state = self.info.clone();
@@ -104,7 +108,6 @@ impl rwcst::AppImpl for App {
     }
 
     async fn map_info<F: FnOnce(&mut rwcst::Info)>(&mut self, f: F) -> Result<()> {
-        use std::ops::DerefMut;
         Ok(f(self.info.lock().await.deref_mut()))
     }
 
