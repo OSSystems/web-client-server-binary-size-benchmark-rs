@@ -4,8 +4,11 @@
 
 use derive_more::From;
 use futures_util::lock::Mutex;
-use http_client::native::NativeClient;
-use std::sync::Arc;
+use http_client::h1::H1Client;
+use std::{
+    ops::{Deref, DerefMut},
+    sync::Arc,
+};
 
 use rwcst::prelude::*;
 
@@ -19,11 +22,11 @@ async fn main() {
 }
 
 struct LocalClient {
-    client: surf::Client<NativeClient>,
+    client: surf::Client<H1Client>,
 }
 
 struct RemoteClient {
-    client: surf::Client<NativeClient>,
+    client: surf::Client<H1Client>,
     remote: String,
 }
 
@@ -49,7 +52,7 @@ impl rwcst::LocalClientImpl for LocalClient {
     }
 
     async fn fetch_info(&mut self) -> Result<rwcst::Info> {
-        Ok(self.client.get("http://localhost:8001").recv_json().await?)
+        Ok(self.client.get("http://127.0.0.1:8001").recv_json().await?)
     }
 }
 
@@ -86,8 +89,6 @@ impl rwcst::AppImpl for App {
     }
 
     fn serve(&mut self) -> Result<()> {
-        use std::ops::Deref;
-
         let state = self.info.clone();
         let mut app = tide::with_state(state);
         app.at("/").get(|req: tide::Request<Arc<Mutex<rwcst::Info>>>| async move {
@@ -103,7 +104,6 @@ impl rwcst::AppImpl for App {
     }
 
     async fn map_info<F: FnOnce(&mut rwcst::Info)>(&mut self, f: F) -> Result<()> {
-        use std::ops::DerefMut;
         Ok(f(self.info.lock().await.deref_mut()))
     }
 

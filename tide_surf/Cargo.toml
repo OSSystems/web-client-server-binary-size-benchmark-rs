@@ -14,6 +14,6 @@ async-std = { version = "1", default-features = false, features = ["attributes"]
 derive_more = { version = "0.99", default-features = false, features = ["from"] }
 futures-util = "0.3"
 rwcst = { path = "..", package = "rust-web-client-server-testing" }
-surf = "2.0.0-alpha.4"
-http-client = "3.0"
-tide = "0.11"
+surf = { version = "2.0.0-alpha.4", default-features = false, features = ["h1-client"] }
+http-client = { version = "3.0", default-features = false, features = ["h1_client"] }
+tide = { version = "0.11", default-features = false, features = ["h1-server"] }
