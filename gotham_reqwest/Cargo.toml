@@ -11,11 +11,10 @@ edition = "2018"
 [dependencies]
 async-trait = "0.1"
 derive_more = { version = "0.99", default-features = false, features = ["from"] }
-futures-util = "0.3"
 gotham = { git = "https://github.com/gotham-rs/gotham", package = "gotham" }
 gotham_derive = { git = "https://github.com/gotham-rs/gotham", package = "gotham_derive" }
+mime = "0.3"
 reqwest = { version = "0.10", default-features = false, features = ["json", "native-tls"] }
 rwcst = { path = "..", package = "rust-web-client-server-testing" }
-serde_json = "1.0"
+serde_json = { version = "1", default-features = false, features = ["std"] }
 tokio = { version = "0.2", features = ["macros"] }
-mime = "0.3"
