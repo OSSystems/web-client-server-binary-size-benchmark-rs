@@ -15,14 +15,15 @@ name = "rwcst"
 [workspace]
 members = [
         "dummy",
+
         "actix_full",
         "actix_reqwest",
         "gotham_reqwest",
         "hyper_full",
         "hyper_reqwest",
-        "warp_surf",
         "tide_surf",
         "warp_reqwest",
+        "warp_surf",
 ]
 
 [dependencies]
