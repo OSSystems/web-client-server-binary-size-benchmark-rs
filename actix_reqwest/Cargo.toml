@@ -16,4 +16,4 @@ async-trait = "0.1"
 derive_more = { version = "0.99", default-features = false, features = ["from"] }
 futures-util = "0.3"
 reqwest = { version = "0.10", default-features = false, features = ["json", "native-tls"] }
-rwcst = { path = "..", package = "rust-web-client-server-testing" }
+bench = { path = "..", package = "web-client-server-binary-size-benchmark" }

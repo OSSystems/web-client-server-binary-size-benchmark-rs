@@ -3,14 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 [package]
-name = "rust-web-client-server-testing"
+name = "web-client-server-binary-size-benchmark"
 version = "0.1.0"
 authors = ["Jonathas-Conceicao <jonathas.conceicao@ossystems.com.br"]
 edition = "2018"
 publish = false
 
 [lib]
-name = "rwcst"
+name = "bench"
 
 [workspace]
 members = [

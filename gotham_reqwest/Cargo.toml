@@ -15,6 +15,6 @@ gotham = { git = "https://github.com/gotham-rs/gotham", package = "gotham" }
 gotham_derive = { git = "https://github.com/gotham-rs/gotham", package = "gotham_derive" }
 mime = "0.3"
 reqwest = { version = "0.10", default-features = false, features = ["json", "native-tls"] }
-rwcst = { path = "..", package = "rust-web-client-server-testing" }
+bench = { path = "..", package = "web-client-server-binary-size-benchmark" }
 serde_json = { version = "1", default-features = false, features = ["std"] }
 tokio = { version = "0.2", features = ["macros"] }
