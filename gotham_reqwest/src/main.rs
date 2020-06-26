@@ -8,15 +8,15 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use rwcst::prelude::*;
+use bench::prelude::*;
 
 #[tokio::main]
 async fn main() {
-    let (url, _guards) = rwcst::start_remote_mock();
+    let (url, _guards) = bench::start_remote_mock();
     let local_client = LocalClient::new();
     let remote_client = RemoteClient::new(&url);
     let app = App::new(remote_client);
-    rwcst::run(local_client, app).await;
+    bench::run(local_client, app).await;
 }
 
 struct LocalClient {
@@ -29,7 +29,7 @@ struct RemoteClient {
 }
 
 struct App {
-    info: Arc<Mutex<rwcst::Info>>,
+    info: Arc<Mutex<bench::Info>>,
     client: RemoteClient,
 }
 
@@ -37,7 +37,7 @@ struct App {
 enum Err {
     Server(gotham::error::Error),
     Client(reqwest::Error),
-    Parsing(rwcst::ParsingError),
+    Parsing(bench::ParsingError),
     MutexPosion,
 }
 
@@ -50,34 +50,34 @@ impl<T> From<std::sync::PoisonError<T>> for Err {
 type Result<T> = std::result::Result<T, Err>;
 
 #[async_trait::async_trait(?Send)]
-impl rwcst::LocalClientImpl for LocalClient {
+impl bench::LocalClientImpl for LocalClient {
     type Err = Err;
 
     fn new() -> Self {
         LocalClient { client: reqwest::Client::new() }
     }
 
-    async fn fetch_info(&mut self) -> Result<rwcst::Info> {
+    async fn fetch_info(&mut self) -> Result<bench::Info> {
         Ok(self.client.get("http://localhost:8001").send().await?.json().await?)
     }
 }
 
 #[async_trait::async_trait(?Send)]
-impl rwcst::RemoteClientImpl for RemoteClient {
+impl bench::RemoteClientImpl for RemoteClient {
     type Err = Err;
 
     fn new(remote: &str) -> Self {
         RemoteClient { client: reqwest::Client::new(), remote: remote.to_owned() }
     }
 
-    async fn fetch_package(&mut self) -> Result<Option<(rwcst::Package, rwcst::Signature)>> {
+    async fn fetch_package(&mut self) -> Result<Option<(bench::Package, bench::Signature)>> {
         let response = self.client.get(&self.remote).send().await?;
 
         if let reqwest::StatusCode::OK = response.status() {
-            let sign = rwcst::Signature::from_base64_str(
+            let sign = bench::Signature::from_base64_str(
                 &response.headers().get("Signature").unwrap().to_str().unwrap(),
             );
-            let pkg = rwcst::Package::parse(&response.bytes().await?)?;
+            let pkg = bench::Package::parse(&response.bytes().await?)?;
             return Ok(Some((pkg, sign)));
         }
 
@@ -86,7 +86,7 @@ impl rwcst::RemoteClientImpl for RemoteClient {
 }
 
 #[async_trait::async_trait(?Send)]
-impl rwcst::AppImpl for App {
+impl bench::AppImpl for App {
     type Err = Err;
     type RemoteClient = RemoteClient;
 
@@ -108,7 +108,7 @@ impl rwcst::AppImpl for App {
         use gotham_derive::StateData;
 
         #[derive(Clone, StateData)]
-        struct Info(Arc<Mutex<rwcst::Info>>);
+        struct Info(Arc<Mutex<bench::Info>>);
 
         async fn handle(state: State) -> HandlerResult {
             let res = match serde_json::to_string(state.borrow::<Info>().0.deref()) {
@@ -138,7 +138,7 @@ impl rwcst::AppImpl for App {
         Ok(())
     }
 
-    async fn map_info<F: FnOnce(&mut rwcst::Info)>(&mut self, f: F) -> Result<()> {
+    async fn map_info<F: FnOnce(&mut bench::Info)>(&mut self, f: F) -> Result<()> {
         Ok(f(self.info.lock()?.deref_mut()))
     }
 
