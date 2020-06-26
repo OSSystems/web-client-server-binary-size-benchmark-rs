@@ -9,11 +9,12 @@ authors = ["asakiz <asakizin@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+async-std = { version = "1", default-features = false, features = ["tokio02"] }
 async-trait = "0.1"
 derive_more = { version = "0.99", default-features = false, features = ["from"] }
 futures-util = "0.3"
+http-client = { version = "3.0", default-features = false, features = ["h1_client"] }
 rwcst = { path = "..", package = "rust-web-client-server-testing" }
-tokio = { version = "0.2", features = ["macros"] }
+surf = { version = "2.0.0-alpha.4", default-features = false, features = ["h1-client"] }
+tokio = { version = "0.2", features = ["macros", "rt-core"] }
 warp = "0.2"
-surf = "2.0.0-alpha.4"
-http-client = "3.0"
